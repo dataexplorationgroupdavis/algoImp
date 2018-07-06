@@ -1,45 +1,52 @@
 # python3
 
 # Backpropagation Algorithm from scratch
-# neural network for binary classification
 # Modified from an online script
 # source from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/
 
 from random import random, seed
 from math import exp
+import numpy as np
 
 # initialize a network
-def initialize_network(n_inputs, n_hidden):
+def initialize_network(n_inputs, n_hidden, n_outputs):
     '''
+    only one hidden layer now
     n_inputs: number of features
-    n_hidden: number of hidder layers
+    n_hidden: number of nuerons in a hidder layer
+    n_outputs: number of outputs
+
+    each neuron is stored as a dictionary
     '''
     network = list()
-    hidden_layer = [{'weight':[random() for i in range(n_inputs)]} for i in range(n_hidden)]
+    hidden_layer = [{'weights':[random() for i in range(n_inputs+1)]} for i in range(n_hidden)] # +1 for bias term
     network.append(hidden_layer)
-    output_layer = [{'weight':[random() for i in range(n_hidden)]} for i in range(2)]
+    output_layer = [{'weights':[random() for i in range(n_hidden+1)]} for i in range(n_outputs)]
     network.append(output_layer)
     return network
 
 # Calculate neuron activation for an input
 def activate(weights, inputs):
     '''
+    calculation of activation, like a regresion
     linear combination: w1*x1 + w2*x2 + ... 
     '''
-    activation = weights 
-    for i in range(len(weights)):
+    activation = weights[-1] # bias term
+    for i in range(len(weights)-1):
         activation += weights[i] * inputs[i]
     return activation
 
 # Transfer neuron activation
 def transfer(activation):
     '''
+    from linear to non-linear
     sigmoid/logtistic regression 
     '''
-    value = 1.0 / (1.0 + exp(-activation))
-    if(value < 0.5):
-        return 0
-    return 1
+    return 1.0 / (1.0 + exp(-activation))
+    # value = 1.0 / (1.0 + exp(-activation))
+    # if(value < 0.5):
+    #     return 0
+    # return 1
 
 # Forward propagate input to a network output
 def forward_propagate(network, row):
@@ -56,7 +63,7 @@ def forward_propagate(network, row):
             neuron['output'] = transfer(activation)
             new_inputs.append(neuron['output'])
         inputs = new_inputs
-    return inputs
+    return np.array(inputs)
 
 # Calculate the derivative of an neuron output
 def transfer_derivative(output):
@@ -68,6 +75,7 @@ def backward_propagate_error(network, expected):
     '''
     network: network
     expected: real output 
+    delta: the error signal
     '''
     for i in reversed(range(len(network))):
         layer = network[i]
@@ -75,13 +83,13 @@ def backward_propagate_error(network, expected):
         if i != len(network) - 1:
             for j in range(len(layer)):
                 error = 0.0
-                for neuron in networks[i + 1]:
+                for neuron in network[i + 1]:
                     error += (neuron['weights'][j] * neuron['delta'])
                 errors.append(error)
         else:
             for j in range(len(layer)):
                 neuron = layer[j]
-                errors.append(expected[j] - neuron['output'])
+                errors.append(expected - neuron['output'])
         for j in range(len(layer)):
             neuron = layer[j]
             neuron['delta'] = errors[j] * transfer_derivative(neuron['output'])
@@ -98,7 +106,9 @@ def update_weights(network, row, l_rate):
             inputs = [neuron['output'] for neuron in network[i-1]]
         for neuron in network[i]:
             for j in range(len(inputs)):
-                neuron['weights'] += l_rate * neuron['delta']
+                neuron['weights'][j] += l_rate * neuron['delta'] * inputs[j]
+            neuron['weights'][-1] += l_rate * neuron['delta']
+
 
 # Train a network for a fixed number of epochs
 def train_network(network, Xtrain, ytrain, l_rate, n_epoch):
@@ -110,14 +120,55 @@ def train_network(network, Xtrain, ytrain, l_rate, n_epoch):
     '''
     for epoch in range(n_epoch):
         sum_error = 0
-        for row in Xtrain:
+        for i in range(len(Xtrain)):
+            row = Xtrain[i]
             outputs = forward_propagate(network, row)
-            actual = ytrain 
-            sum_error += sum([(actual[i] - outputs[i])**2 for i in range(len(expected))])
-            backward_propagate_error(network, actual)
+            # print('output:',outputs)
+            expected = ytrain[i] 
+            #  sum_error += sum([(expected[i] - outputs[i])**2 for i in range(len(expected))])
+            sum_error += (expected - outputs) ** 2
+            backward_propagate_error(network, expected)
             update_weights(network, row, l_rate)
         print('>epoch=%d, lrate=%.3f, error=%.3f' % (epoch, l_rate, sum_error))
+
+def predict(network, row):
+    '''
+    wait to be done
+    '''
+
+def run_nn(Xtrain, ytrian, Xtest, ytest, l_rate, n_epoch, n_hidden):
+    '''
+    wait to be done
+    '''
+    n_inputs = len(Xtrain[0])
+    n_outputs = len(set(ytrain))
+    network = initialize_network(n_inputs, n_hidden, n_outputs)
+    train_network(network, Xtrain, ytrain, l_rate, n_epoch, n_outputs)
+    predictions = []
+    for i in len(range(Xtest)):
+        prediction = predict(network, Xtest[i])
+        predictions.append(prediction)
+    return predictions
 
 
 # TODO
 # testing
+def main():
+    from mnist import MNIST
+    mndata = MNIST("../MNIST/samples")
+    Xtrain, ytrain = mndata.load_training()
+    Xtest, ytest = mndata.load_testing()
+    #  zerosAndOnes = ytrain == 0 or ytrain == 1
+    #  X = Xtrain[zerosAndOnes]
+    #  y = ytrain[zerosAndOnes]
+    #  zerosAndOnes2 = ytest == 0 or ytest == 0
+    #  Xt = Xtest[zerosAndOnes2]
+    #  yt = ytest[zerosAndOnes2]
+    #  n_inputs = len(X[0])
+    network = initialize_network(n_inputs=len(Xtrain[0]), n_hidden=10, n_outputs=1)
+    import pdb
+    #  pdb.set_trace()
+    train_network(network, Xtrain, ytrain, l_rate = 0.1, n_epoch = 6)
+
+if __name__ == '__main__':
+    main()
