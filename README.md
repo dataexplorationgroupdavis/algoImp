@@ -1,1 +1,1 @@
-# algoImp
+# algorithm implimentation from scratch

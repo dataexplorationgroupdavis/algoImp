@@ -1,9 +1,18 @@
 # python3
 
-# Backpropagation Algorithm from scratch
+# Artificial Neural Network from scratch
+# test data: MNIST dataset
 # Modified from an online script
 # source from https://machinelearningmastery.com/implement-backpropagation-algorithm-scratch-python/
 
+'''
+Workflow
+- initialize_network 
+- train_network
+   - forward_propagate 
+   - backward_propagate_error 
+   - update_weights 
+'''
 from random import random, seed
 from math import exp
 import numpy as np
@@ -132,43 +141,32 @@ def train_network(network, Xtrain, ytrain, l_rate, n_epoch):
         print('>epoch=%d, lrate=%.3f, error=%.3f' % (epoch, l_rate, sum_error))
 
 def predict(network, row):
-    '''
-    wait to be done
-    '''
+    outputs = forward_propagate(network, row)
+    return outputs.index(max(outputs))
 
-def run_nn(Xtrain, ytrian, Xtest, ytest, l_rate, n_epoch, n_hidden):
-    '''
-    wait to be done
-    '''
-    n_inputs = len(Xtrain[0])
-    n_outputs = len(set(ytrain))
-    network = initialize_network(n_inputs, n_hidden, n_outputs)
-    train_network(network, Xtrain, ytrain, l_rate, n_epoch, n_outputs)
-    predictions = []
-    for i in len(range(Xtest)):
-        prediction = predict(network, Xtest[i])
-        predictions.append(prediction)
-    return predictions
-
-
-# TODO
-# testing
 def main():
     from mnist import MNIST
     mndata = MNIST("../MNIST/samples")
     Xtrain, ytrain = mndata.load_training()
     Xtest, ytest = mndata.load_testing()
-    #  zerosAndOnes = ytrain == 0 or ytrain == 1
-    #  X = Xtrain[zerosAndOnes]
-    #  y = ytrain[zerosAndOnes]
-    #  zerosAndOnes2 = ytest == 0 or ytest == 0
-    #  Xt = Xtest[zerosAndOnes2]
-    #  yt = ytest[zerosAndOnes2]
-    #  n_inputs = len(X[0])
-    network = initialize_network(n_inputs=len(Xtrain[0]), n_hidden=10, n_outputs=1)
+
+    # normalize data
+    Xtrain = np.array(Xtrain) / 255.0
+    Xtest = np.array(Xtest) / 255.0
+
+    network = initialize_network(n_inputs=len(Xtrain[0]), n_hidden=4, n_outputs=1)
     import pdb
     #  pdb.set_trace()
     train_network(network, Xtrain, ytrain, l_rate = 0.1, n_epoch = 6)
-
+    predictions = []
+    for row in Xtest:
+        predictions.append(predict(network, row))
+    sum(predictions == ytest)
 if __name__ == '__main__':
     main()
+
+# TODO
+# 1. make algorithm work
+# 2. understand backpropagation error
+# 3. make the number of hidden layers arbitrary
+# 4. try to use np.array instead of list
