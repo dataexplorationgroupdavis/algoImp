@@ -26,6 +26,7 @@ from random import random, seed
 from math import exp
 import numpy as np
 import pdb
+from time import time
 
 # initialize a network
 def initialize_network(n_inputs, n_hidden, n_outputs):
@@ -61,7 +62,7 @@ def transfer(activation):
     from linear to non-linear
     sigmoid/logtistic regression 
     '''
-    return 1.0 / (1.0 + exp(-activation/10))
+    return 1.0 / (1.0 + exp(-activation))
 
 # Forward propagate input to a network output
 def forward_propagate(network, row):
@@ -74,8 +75,9 @@ def forward_propagate(network, row):
     for layer in network:
         new_inputs = []
         for neuron in layer:
-            #  print(len(neuron['weights']))
-            activation = activate(neuron['weights'], inputs)
+            # activation is a large number
+            # need to be normalized to make algorithm more efficient
+            activation = activate(neuron['weights'], inputs) / len(neuron['weights'])
             neuron['output'] = transfer(activation)
             new_inputs.append(neuron['output'])
         inputs = new_inputs
@@ -135,6 +137,7 @@ def train_network(network, Xtrain, ytrain, l_rate, n_epoch):
     n_epoch: number times run through network
     '''
     for epoch in range(n_epoch):
+        starttime = time()
         sum_error = 0
         for i in range(len(Xtrain)):
             row = Xtrain[i]
@@ -147,7 +150,7 @@ def train_network(network, Xtrain, ytrain, l_rate, n_epoch):
             backward_propagate_error(network, expected)
             update_weights(network, row, l_rate)
             #  pdb.set_trace()
-        print('>epoch=%d, lrate=%.3f, error=%.3f' % (epoch, l_rate, sum_error))
+        print('>epoch=%d, lrate=%.3f, error=%.3f, time=%d' % (epoch, l_rate, sum_error, time() - starttime))
 
 def predict(network, row):
     outputs = forward_propagate(network, row)
@@ -165,7 +168,7 @@ def main():
     n_outputs = len(set(ytrain))
     network = initialize_network(n_inputs=len(Xtrain[0]), n_hidden=20, n_outputs=n_outputs)
     #  pdb.set_trace()
-    train_network(network, Xtrain, ytrain, l_rate = 1, n_epoch = 3)
+    train_network(network, Xtrain, ytrain, l_rate = 1, n_epoch = 6)
     predictions = []
     for row in Xtest:
         predictions.append(predict(network, row))
