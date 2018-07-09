@@ -39,9 +39,11 @@ def initialize_network(n_inputs, n_hidden, n_outputs):
     each neuron is stored as a dictionary
     '''
     network = list()
-    hidden_layer = [{'weights':[random() for i in range(n_inputs+1)]} for i in range(n_hidden)] # +1 for bias term
+    #  hidden_layer = [{'weights':[random() for i in range(n_inputs+1)]} for i in range(n_hidden)] # +1 for bias term
+    hidden_layer = [{'weights': np.random.rand(n_inputs+1)} for i in range(n_hidden)]
     network.append(hidden_layer)
-    output_layer = [{'weights':[random() for i in range(n_hidden+1)]} for i in range(n_outputs)]
+    #  output_layer = [{'weights':[random() for i in range(n_hidden+1)]} for i in range(n_outputs)]
+    output_layer = [{'weights': np.random.rand(n_hidden+1)} for i in range(n_outputs)]
     network.append(output_layer)
     return network
 
@@ -51,18 +53,19 @@ def activate(weights, inputs):
     calculation of activation, like a regresion
     linear combination: w1*x1 + w2*x2 + ... 
     '''
-    activation = weights[-1] # bias term
-    for i in range(len(weights)-1):
-        activation += weights[i] * inputs[i]
-    return activation
+    #  activation = weights[-1] # bias term
+    #  for i in range(len(weights)-1):
+    #      activation += weights[i] * inputs[i]
+    activation = weights.dot(inputs) / len(weights)
+    return 1.0  / (1.0 + exp(-activation))
 
-# Transfer neuron activation
-def transfer(activation):
-    '''
-    from linear to non-linear
-    sigmoid/logtistic regression 
-    '''
-    return 1.0 / (1.0 + exp(-activation))
+#  # Transfer neuron activation
+#  def transfer(activation):
+#      '''
+#      from linear to non-linear
+#      sigmoid/logtistic regression
+#      '''
+#      return 1.0 / (1.0 + exp(-activation))
 
 # Forward propagate input to a network output
 def forward_propagate(network, row):
@@ -77,8 +80,9 @@ def forward_propagate(network, row):
         for neuron in layer:
             # activation is a large number
             # need to be normalized to make algorithm more efficient
-            activation = activate(neuron['weights'], inputs) / len(neuron['weights'])
-            neuron['output'] = transfer(activation)
+            activation = activate(neuron['weights'], np.append(inputs,1))
+            #  neuron['output'] = transfer(activation)
+            neuron['output'] = activation 
             new_inputs.append(neuron['output'])
         inputs = new_inputs
     return np.array(inputs)
@@ -168,7 +172,7 @@ def main():
     n_outputs = len(set(ytrain))
     network = initialize_network(n_inputs=len(Xtrain[0]), n_hidden=20, n_outputs=n_outputs)
     #  pdb.set_trace()
-    train_network(network, Xtrain, ytrain, l_rate = 1, n_epoch = 6)
+    train_network(network, Xtrain, ytrain, l_rate = 1, n_epoch = 2)
     predictions = []
     for row in Xtest:
         predictions.append(predict(network, row))
@@ -182,4 +186,12 @@ if __name__ == '__main__':
 # 2. understand backpropagation error (check)
 # 3. make the number of hidden layers arbitrary
 # 4. try to use np.array instead of list
+#      function                  |    if works
+#    - update weights            |
+#    - backpropagation error     |
+#    - activation (done)         |    700s to 600s 
 # 5. understand activation function and transfer function
+
+# NOTE
+# for each epoch, it takes around 700 seconds (see, if we can use
+# numpy array to reduce time)
