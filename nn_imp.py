@@ -127,9 +127,10 @@ def update_weights(network, row, l_rate):
         if i != 0:
             inputs = [neuron['output'] for neuron in network[i-1]]
         for neuron in network[i]:
-            for j in range(len(inputs)):
-                neuron['weights'][j] += l_rate * neuron['delta'] * inputs[j]
-            neuron['weights'][-1] += l_rate * neuron['delta']
+            #  for j in range(len(inputs)):
+            #      neuron['weights'][j] += l_rate * neuron['delta'] * inputs[j]
+            #  neuron['weights'][-1] += l_rate * neuron['delta']
+            neuron['weights'] += l_rate * neuron['delta'] * np.append(inputs, 1)
 
 
 # Train a network for a fixed number of epochs
@@ -170,9 +171,9 @@ def main():
     Xtrain = np.array(Xtrain) / 255.0
     Xtest = np.array(Xtest) / 255.0
     n_outputs = len(set(ytrain))
-    network = initialize_network(n_inputs=len(Xtrain[0]), n_hidden=20, n_outputs=n_outputs)
+    network = initialize_network(n_inputs=len(Xtrain[0]), n_hidden=200, n_outputs=n_outputs)
     #  pdb.set_trace()
-    train_network(network, Xtrain, ytrain, l_rate = 1, n_epoch = 2)
+    train_network(network, Xtrain, ytrain, l_rate = 1, n_epoch = 12)
     predictions = []
     for row in Xtest:
         predictions.append(predict(network, row))
@@ -187,7 +188,7 @@ if __name__ == '__main__':
 # 3. make the number of hidden layers arbitrary
 # 4. try to use np.array instead of list
 #      function                  |    if works
-#    - update weights            |
+#    - update weights            |    600s to 35s
 #    - backpropagation error     |
 #    - activation (done)         |    700s to 600s 
 # 5. understand activation function and transfer function
