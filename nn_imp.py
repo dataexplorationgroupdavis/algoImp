@@ -12,6 +12,7 @@ Workflow
    - forward_propagate 
    - backward_propagate_error 
    - update_weights 
+- predict
 
 
 data structure
@@ -23,7 +24,7 @@ data structure
       - outputs: list
 '''
 from random import random, seed
-from math import exp
+from math import exp, log
 import numpy as np
 import pdb
 from time import time
@@ -39,11 +40,14 @@ def initialize_network(n_inputs, n_hidden, n_outputs):
     each neuron is stored as a dictionary
     '''
     network = list()
-    #  hidden_layer = [{'weights':[random() for i in range(n_inputs+1)]} for i in range(n_hidden)] # +1 for bias term
-    hidden_layer = [{'weights': np.random.rand(n_inputs+1)} for i in range(n_hidden)]
-    network.append(hidden_layer)
-    #  output_layer = [{'weights':[random() for i in range(n_hidden+1)]} for i in range(n_outputs)]
-    output_layer = [{'weights': np.random.rand(n_hidden+1)} for i in range(n_outputs)]
+    for j in range(len(n_hidden)):
+        if j == 0:
+            hidden_layer = [{'weights': np.random.rand(n_inputs+1)} for i in range(n_hidden[j])]
+        else:
+            hidden_layer = [{'weights': np.random.rand(n_hidden[j-1]+1)} for i in range(n_hidden[j])]
+        network.append(hidden_layer)
+
+    output_layer = [{'weights': np.random.rand(n_hidden[-1]+1)} for i in range(n_outputs)]
     network.append(output_layer)
     return network
 
@@ -53,19 +57,21 @@ def activate(weights, inputs):
     calculation of activation, like a regresion
     linear combination: w1*x1 + w2*x2 + ... 
     '''
-    #  activation = weights[-1] # bias term
-    #  for i in range(len(weights)-1):
-    #      activation += weights[i] * inputs[i]
-    activation = weights.dot(inputs) / len(weights)
-    return 1.0  / (1.0 + exp(-activation))
 
-#  # Transfer neuron activation
-#  def transfer(activation):
-#      '''
-#      from linear to non-linear
-#      sigmoid/logtistic regression
-#      '''
-#      return 1.0 / (1.0 + exp(-activation))
+    # normalization
+    regression = weights.dot(inputs)
+    if regression < 0:
+        regression = -log(-regression)
+    else:
+        regression = log(regression)
+
+    # sigmoid 
+    activation = 1.0 / (1.0 + exp(-regression))
+
+    # hyperbolic tangent
+    # activation = (exp(regression) - exp(regression)) / (exp(regression) + exp(-regression))
+
+    return activation
 
 # Forward propagate input to a network output
 def forward_propagate(network, row):
@@ -171,9 +177,10 @@ def main():
     Xtrain = np.array(Xtrain) / 255.0
     Xtest = np.array(Xtest) / 255.0
     n_outputs = len(set(ytrain))
-    network = initialize_network(n_inputs=len(Xtrain[0]), n_hidden=200, n_outputs=n_outputs)
+    n_inputs = len(Xtrain[0])
+    network = initialize_network(n_inputs=n_inputs, n_hidden=[int((n_inputs+n_outputs)/2)], n_outputs=n_outputs)
     #  pdb.set_trace()
-    train_network(network, Xtrain, ytrain, l_rate = 1, n_epoch = 12)
+    train_network(network, Xtrain, ytrain, l_rate = 1, n_epoch = 16)
     predictions = []
     for row in Xtest:
         predictions.append(predict(network, row))
@@ -185,7 +192,7 @@ if __name__ == '__main__':
 # TODO
 # 1. make algorithm work (check)
 # 2. understand backpropagation error (check)
-# 3. make the number of hidden layers arbitrary
+# 3. make the number of hidden layers arbitrary (check) (does not help much, and not sure why)
 # 4. try to use np.array instead of list
 #      function                  |    if works
 #    - update weights            |    600s to 35s
@@ -196,3 +203,5 @@ if __name__ == '__main__':
 # NOTE
 # for each epoch, it takes around 700 seconds (see, if we can use
 # numpy array to reduce time)
+# n_hidden is about 400, accuracy is 0.977, each epoch is about 480s
+# n_hidden is about 250, accuracy is 0.974, each epoch is about 300s
