@@ -8,6 +8,7 @@
 #   0 < ai < C => yi ( wt xi + b) = 1
 
 import numpy as np 
+import pdb
 
 def predict(Xtest, w, b):
     classification = np.sign(np.dot(np.array(Xtest), w) + b)
@@ -86,7 +87,7 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
 
     return alphas, b
 
-def svm(Xtrain, ytrain, C, tol, max_passes, Xtest):
+def svm(Xtrain, ytrain, C, tol, max_passes):
     alphas, b = smo(Xtrain, ytrain, 1, 0.001, 4)
     n, p = Xtrain.shape
     
@@ -94,7 +95,28 @@ def svm(Xtrain, ytrain, C, tol, max_passes, Xtest):
     for m in range(n):
         w += alphas[m] * ytrain[m] * Xtrain[m]
     
-    predictions = predict(Xtest, w, b)
+    return w, b
+
+def main():
+    from mnist import MNIST                                                                                                             
+    mndata = MNIST("../MNIST/samples")                                                                                                         
+    Xtrain, ytrain = mndata.load_training()                                                                                                    
+    Xtest, ytest = mndata.load_testing() 
+    # normalize data 
+    Xtrain = np.array(Xtrain) / 255.0                                                                                                          
+    Xtest = np.array(Xtest) / 255.0    
+
+    predictions = []
+    n_outputs = len(set(ytrain))
+    for i in range(n_outputs):
+        ytrainNew = np.copy(ytrain)
+        ytrainNew[ytrainNew == i] = 1
+        ytrainNew[ytrainNew != i] = -1
+        w, b = svm(Xtrain, ytrainNew, C=5, tol=0.001, max_passes=3)
+        predictions.append(predict(Xtest, w, b))
+    
+    pdb.set_trace()
     return predictions 
 
-
+if __name__ == "__main__":
+    main()
