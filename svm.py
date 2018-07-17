@@ -103,20 +103,20 @@ def main():
     Xtrain, ytrain = mndata.load_training()                                                                                                    
     Xtest, ytest = mndata.load_testing() 
     # normalize data 
-    Xtrain = np.array(Xtrain) / 255.0                                                                                                          
+    Xtrain = np.array(Xtrain[0:1000]) / 255.0
+    ytrain = ytrain[0:1000]
     Xtest = np.array(Xtest) / 255.0    
 
-    predictions = []
     n_outputs = len(set(ytrain))
-    for i in range(n_outputs):
-        ytrainNew = np.copy(ytrain)
-        ytrainNew[ytrainNew == i] = 1
-        ytrainNew[ytrainNew != i] = -1
-        w, b = svm(Xtrain, ytrainNew, C=5, tol=0.001, max_passes=3)
-        predictions.append(predict(Xtest, w, b))
-    
+    ytrainNew = np.copy(ytrain)
+    ytrainNew[ytrainNew != 0] = 1
+    w, b = svm(Xtrain, ytrainNew, C=5, tol=0.001, max_passes=3)
+    predictions = predict(Xtest, w, b)
+    predictions[predictions == -1] = 1
+    ytestNew = np.copy(ytest)
+    ytestNew[ytestNew != 0] = 1
     pdb.set_trace()
-    return predictions 
+    print(sum(ytestNew == predictions) / float(len(ytestNew)))  
 
 if __name__ == "__main__":
     main()
