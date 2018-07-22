@@ -21,11 +21,13 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
     alphas = np.zeros(n)
     b = 0
     passes = 0
+    print('test')
 
     while(passes < max_passes):
         count = 0
+        #  pdb.set_trace()
         for i in range(n):
-            # Ei = f(xi) - yi
+            # Ei is our loss
             Ei = b - ytrain[i]
             for m in range(n):
                 Ei += alphas[m]*ytrain[m]*Xtrain[m].dot(Xtrain[i])
@@ -53,6 +55,7 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
 
                 ita = 2*Xtrain[i].dot(Xtrain[j]) - Xtrain[i].dot(Xtrain[i]) - Xtrain[j].dot(Xtrain[j]) 
                
+                # continue for jump to next i 
                 if(ita >= 0): continue
 
                 # compute new value for aj
@@ -88,7 +91,8 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
     return alphas, b
 
 def svm(Xtrain, ytrain, C, tol, max_passes):
-    alphas, b = smo(Xtrain, ytrain, 1, 0.001, 4)
+    alphas, b = smo(Xtrain, ytrain, C, tol, max_passes)
+    print(alphas)
     n, p = Xtrain.shape
     
     w = np.zeros(p)
@@ -102,21 +106,36 @@ def main():
     mndata = MNIST("../MNIST/samples")                                                                                                         
     Xtrain, ytrain = mndata.load_training()                                                                                                    
     Xtest, ytest = mndata.load_testing() 
-    # normalize data 
-    Xtrain = np.array(Xtrain[0:1000]) / 255.0
-    ytrain = ytrain[0:1000]
+ 
+#   Training Data    
+#   make a subset of binary data
+    subsetZip = np.array([[j,i] for [j,i] in enumerate(ytrain) if i == 0 or i == 1])
+    indice = subsetZip[:,0]
+    ytrainNew = subsetZip[:,1]
+    ytrainBin = [1 if i == 1 else -1 for i in ytrainNew]
+    XtrainNew = np.array(Xtrain)[indice]
+#   normalize data 
+    Xtrain = np.array(XtrainNew) / 255.0
+    ytrain = ytrainBin 
+    
+#   Testing Data
+    subsetZipTest = np.array([[j,i] for [j,i] in enumerate(ytest) if i == 0 or i == 1])
+    indiceTest = subsetZipTest[:,0]
+    ytestNew = subsetZipTest[:,1]
+    ytestBin = [1 if i == 1 else -1 for i in ytestNew]
+    XtestNew = np.array(Xtest)[indiceTest]
+#   normalize data 
+    Xtest = np.array(XtestNew) / 255.0
+    ytest = ytestBin
     Xtest = np.array(Xtest) / 255.0    
 
-    n_outputs = len(set(ytrain))
-    ytrainNew = np.copy(ytrain)
-    ytrainNew[ytrainNew != 0] = 1
-    w, b = svm(Xtrain, ytrainNew, C=5, tol=0.001, max_passes=3)
+    w, b = svm(Xtrain, ytrain, C=3, tol=0.001, max_passes=3)
     predictions = predict(Xtest, w, b)
-    predictions[predictions == -1] = 1
-    ytestNew = np.copy(ytest)
-    ytestNew[ytestNew != 0] = 1
-    pdb.set_trace()
-    print(sum(ytestNew == predictions) / float(len(ytestNew)))  
+    print(sum(ytest == predictions) / float(len(ytest)))  
+
+import time 
 
 if __name__ == "__main__":
+    starttime = time.time()
     main()
+    print("time spent:", time.time() - starttime)
