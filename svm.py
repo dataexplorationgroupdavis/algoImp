@@ -9,6 +9,7 @@
 
 import numpy as np 
 import pdb
+from random import randint
 
 def predict(Xtest, w, b):
     classification = np.sign(np.dot(np.array(Xtest), w) + b)
@@ -16,6 +17,7 @@ def predict(Xtest, w, b):
 
 def smo(Xtrain, ytrain, C, tol, max_passes):
     n, p = Xtrain.shape
+    print(('n:{},len:{}').format(n, len(ytrain)))
 
     # Initialization 
     alphas = np.zeros(n)
@@ -24,6 +26,8 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
     print('test')
 
     while(passes < max_passes):
+        print(("passes:{}").format(passes))
+        passtime = time.time()
         count = 0
         #  pdb.set_trace()
         for i in range(n):
@@ -35,9 +39,12 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
             if((ytrain[i]*Ei<-tol and alphas[i]<C) or (ytrain[i]*Ei>tol and alphas[i]>0)):
 
                 # select j != i randomly
-                if(i!=0): j=i-1
-                else: j=i+1
-                
+                j = randint(0,n-1)
+                while(j == i): j = randint(0,n-1)
+
+                #  if(i!=0): j=i-1
+                #  else: j=i+1
+                #  print(("({},{})").format(i,j))
                 Ej = b - ytrain[j]
                 for m in range(n):
                     Ej += alphas[m]*ytrain[m]*Xtrain[m].dot(Xtrain[j])
@@ -54,12 +61,12 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
                     H = min(C, ai+aj)
 
                 ita = 2*Xtrain[i].dot(Xtrain[j]) - Xtrain[i].dot(Xtrain[i]) - Xtrain[j].dot(Xtrain[j]) 
-               
                 # continue for jump to next i 
                 if(ita >= 0): continue
 
                 # compute new value for aj
-                alphas[j] = aj - ytrain[i]*(Ei - Ej) / ita 
+                alphas[j] = aj - ytrain[j]*(Ei - Ej) / ita 
+                
                 # clip new value for aj
                 if(alphas[j] > H):
                     alphas[j] = H
@@ -69,20 +76,22 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
                 
                 if(abs(aj - alphas[j]) < 10**(-5)): continue
 
-                alphas[i] = ytrain[i]*ytrain[j]*(ai - alphas[i])
+                alphas[i] += ytrain[i]*ytrain[j]*(ai - alphas[i])
 
                 b1 = b - Ei - ytrain[i]*(alphas[i] - ai) * Xtrain[i].dot(Xtrain[i]) - ytrain[i]*(alphas[j] - aj)*Xtrain[i].dot(Xtrain[j]) 
                 b2 = b - Ej - ytrain[i]*(alphas[i] - ai) * Xtrain[i].dot(Xtrain[j]) - ytrain[j]*(alphas[j] - aj)*Xtrain[j].dot(Xtrain[j]) 
 
                 if(0 < alphas[i] < C):
                     b = b1
-                elif(0 < alphas[j] and alphas[j] < C):
+                elif(0 < alphas[j] < C):
                     b = b2
                 else:
                     b = (b1 + b2) / 2
 
                 count += 1
 
+        print('count',count)
+        print('pass time:', passtime - time.time())
         if( count == 0):
             passes += 1
         else:
@@ -123,6 +132,7 @@ def main():
     indiceTest = subsetZipTest[:,0]
     ytestNew = subsetZipTest[:,1]
     ytestBin = [1 if i == 1 else -1 for i in ytestNew]
+    #  pdb.set_trace()
     XtestNew = np.array(Xtest)[indiceTest]
 #   normalize data 
     Xtest = np.array(XtestNew) / 255.0
