@@ -1,6 +1,7 @@
 # python3
 
 # support vector machine from scratch
+# using smo algorithm to update alphas
 
 # KKT conditions:
 #   ai = 0 => yi ( wt xi + b) >= 1
@@ -10,6 +11,7 @@
 import numpy as np 
 import pdb
 from random import randint
+import time 
 
 def predict(Xtest, w, b):
     classification = np.sign(np.dot(np.array(Xtest), w) + b)
@@ -17,7 +19,7 @@ def predict(Xtest, w, b):
 
 def smo(Xtrain, ytrain, C, tol, max_passes):
     n, p = Xtrain.shape
-    print(('n:{},len:{}').format(n, len(ytrain)))
+    #  print(('n:{},len:{}').format(n, len(ytrain)))
 
     # Initialization 
     alphas = np.zeros(n)
@@ -91,7 +93,7 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
                 count += 1
 
         print('count',count)
-        print('pass time:', passtime - time.time())
+        print(('pass time: {}s').format(int(time.time() - passtime)))
         if( count == 0):
             passes += 1
         else:
@@ -139,11 +141,10 @@ def main():
     ytest = ytestBin
     Xtest = np.array(Xtest) / 255.0    
 
-    w, b = svm(Xtrain, ytrain, C=3, tol=0.001, max_passes=3)
+    w, b = svm(Xtrain, ytrain, C=5, tol=0.001, max_passes=3)
     predictions = predict(Xtest, w, b)
-    print(sum(ytest == predictions) / float(len(ytest)))  
+    print(("model accuracy: {}").format(sum(ytest == predictions) / float(len(ytest))))
 
-import time 
 
 if __name__ == "__main__":
     starttime = time.time()
