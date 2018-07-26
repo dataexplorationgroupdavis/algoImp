@@ -25,7 +25,7 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
     alphas = np.zeros(n)
     b = 0
     passes = 0
-    print('test')
+    print('smo starts!')
 
     while(passes < max_passes):
         print(("passes:{}").format(passes))
@@ -44,8 +44,6 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
                 j = randint(0,n-1)
                 while(j == i): j = randint(0,n-1)
 
-                #  if(i!=0): j=i-1
-                #  else: j=i+1
                 #  print(("({},{})").format(i,j))
                 Ej = b - ytrain[j]
                 for m in range(n):
@@ -78,6 +76,7 @@ def smo(Xtrain, ytrain, C, tol, max_passes):
                 
                 if(abs(aj - alphas[j]) < 10**(-5)): continue
 
+                # update ai
                 alphas[i] += ytrain[i]*ytrain[j]*(ai - alphas[i])
 
                 b1 = b - Ei - ytrain[i]*(alphas[i] - ai) * Xtrain[i].dot(Xtrain[i]) - ytrain[i]*(alphas[j] - aj)*Xtrain[i].dot(Xtrain[j]) 
