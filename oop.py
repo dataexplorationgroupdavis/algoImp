@@ -1,27 +1,38 @@
 # python3
 # an example of object oriented programming in python
-
 class Student:
-    type = 'student'
+    '''
+    hello world
+    '''
+    type = 'student' # class variable
 
     def __init__(self, name, age, gender): # special method
-        self.name = name # attributes
+        self.name = name # attributes, instance variable
         self.age = age
         self.gender = gender
 
     def __str__(self): # making the class a string for printing
         return(('Name: {}, Age: {}, Gender: {}').format(self.name, self.age, self.gender))
 
+    # regular method
     def addGrade(self, course, grade): # method
         print('{}: {}'.format(course, grade))
+
+    @classmethod
+    def cfunc(self):
+        pass
+
+    @staticmethod
+    def sfunc():
+        pass
 
 class ClubMember(Student): # subclass
     type = 'club member'
     
     class Club:
-        name = 'DEG'
-        def __init__(self):
-            self.name = 'DEG'
+        name = 'DEG' # class variable
+        def __init__(self): 
+            self.name = 'DEG' # instance variable
 
     def __init__(self, name, age, gender, title):
         super().__init__(name, age, gender) # passing arguments to parent class
